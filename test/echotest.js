@@ -1,25 +1,65 @@
 //Require the dev-dependencies
 let chai = require('chai');
 let chaiHttp = require('chai-http');
-let server = require('../app');
-let should = chai.should();
+let app = require('../server'); // Pointing to server.js in the same directory
 
 chai.use(chaiHttp);
+chai.should();
 
-describe('Echo', () => {
-    beforeEach((done) => { //Before each
-            done();
-    });
+describe('Echo Server', () => {
+    describe('POST /', () => {
+        it('should echo plain text with text/plain content-type', (done) => {
+            const testBody = 'Hello, World!';
 
-    describe('/', () => {
-        it('it should POST echo', (done) => {
-            chai.request(server)
+            chai.request(app)
                 .post('/')
-                .send('hello world')
+                .set('Content-Type', 'text/plain')
+                .send(testBody)
                 .end((err, res) => {
                     res.should.have.status(200);
-                    res.text.should.eq('hello world');
+                    res.should.have.header('content-type', /text\/plain/);
+                    // FIX: Compare res.text (the body) to the testBody
+                    res.text.should.equal(testBody);
                     done();
+                });
+        });
+
+        it('should echo JSON and preserve application/json content-type', (done) => {
+            const testBody = {message: 'Hello', count: 42};
+
+            chai.request(app)
+                .post('/')
+                // FIX: Corrected 'Content=Type' typo to 'Content-Type'
+                .set('Content-Type', 'application/json')
+                .send(JSON.stringify(testBody))
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.should.have.header('content-type', /application\/json/);
+                    JSON.parse(res.text).should.deep.equal(testBody);
+                    done();
+                });
+        });
+
+        it('should handle empty body with default text/plain content-type', (done) => {
+            chai.request(app)
+                .post('/')
+                .set('Content-Type', 'text/plain')
+                .send('')
+                .end((err, res) => {
+                    try {
+                        // If there's a request error, pass it to done
+                        if (err && !res) throw err;
+
+                        res.should.have.status(200);
+                        
+                        // If this fails, the catch block will handle it
+                        res.should.have.header('content-type', /text\/plain/);
+                        res.text.should.equal('');
+                        
+                        done();
+                    } catch (error) {
+                        done(error); // This prevents the timeout and shows the real error
+                    }
                 });
         });
     });
