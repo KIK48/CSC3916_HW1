@@ -1,7 +1,7 @@
-//Require the dev-dependencies
+
 let chai = require('chai');
 let chaiHttp = require('chai-http');
-let app = require('../server'); // Pointing to server.js in the same directory
+let app = require('../server'); 
 
 chai.use(chaiHttp);
 chai.should();
@@ -18,7 +18,7 @@ describe('Echo Server', () => {
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.should.have.header('content-type', /text\/plain/);
-                    // FIX: Compare res.text (the body) to the testBody
+                    
                     res.text.should.equal(testBody);
                     done();
                 });
@@ -29,7 +29,7 @@ describe('Echo Server', () => {
 
             chai.request(app)
                 .post('/')
-                // FIX: Corrected 'Content=Type' typo to 'Content-Type'
+                
                 .set('Content-Type', 'application/json')
                 .send(JSON.stringify(testBody))
                 .end((err, res) => {
@@ -47,18 +47,18 @@ describe('Echo Server', () => {
                 .send('')
                 .end((err, res) => {
                     try {
-                        // If there's a request error, pass it to done
+                        
                         if (err && !res) throw err;
 
                         res.should.have.status(200);
                         
-                        // If this fails, the catch block will handle it
+                        
                         res.should.have.header('content-type', /text\/plain/);
                         res.text.should.equal('');
                         
                         done();
                     } catch (error) {
-                        done(error); // This prevents the timeout and shows the real error
+                        done(error); 
                     }
                 });
         });
